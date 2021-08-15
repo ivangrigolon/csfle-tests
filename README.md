@@ -1,4 +1,22 @@
-##Study for CSFLE
+## Study for CSFLE
+
+### Table of Contents
+**[How to git](#how-to-git)**<br>
+**[Aws usefull command](#aws-usefull-command)**<br>
+
+
+## How to git reinder as I don't use it often
+
+## Basic sequence to follow
+1. `git pull` - this will download the latest version. If you don't do this and you try to push something you will see something like ! [rejected]        main -> main (fetch first)
+2. do your changes locally
+3. `git add .` - this is to add the modification to all files, or you can specify the files you want to commit
+4. git commit -m "Some commit comment" - this will commit on the local repository
+5. git push -  this will commit to the remote repo
+6. From vscode you can do this https://marketplace.visualstudio.com/items?itemName=ivangabriele.vscode-git-add-and-commit
+6.1. `Cmd + Shift + A (Mac)` and enter a comment
+6.2. `Cmd + Shift + X (Mac)` and it is pushed
+
 
 ## Key types
 

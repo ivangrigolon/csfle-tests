@@ -3,7 +3,7 @@
 ### Table of Contents
 **[How to git](#how-to-git)**<br>
 **[Aws usefull command](#aws-usefull-command)**<br>
-
+**[2 very different encryption Key types](#2-very-different-encryption-Key-types)**<br>
 
 ## How to git reinder as I don't use it often
 
@@ -18,7 +18,7 @@
 6.2. `Cmd + Shift + X (Mac)` and it is pushed
 
 
-## Key types
+## 2 very different encryption Key types
 
 ### Master Key
 1. This the key that is used to encrypt and decrypt the data key.
@@ -27,6 +27,7 @@
 4. When it is stored in the KMS, the data-key are sent back and forth to the KMS service for encryption and decryption
 
 ### Data key
+
 
 
 ## Example of manual encryption by using locally managed key

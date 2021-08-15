@@ -237,7 +237,7 @@ You should see:
 
 
 
-Use the Mongo() constructor to create a database connection with the client-side field level encryption options. Replace the mongodb://myMongo.example.net URI with the connection string URI of the target cluster.
+Use the Mongo() constructor to create a database connection with the client-side field level encryption options. 
 
 ```
 encryptedClient = Mongo(
@@ -365,7 +365,190 @@ Enterprise replset [direct: primary]> db.employees.find()
 ]
 ```
 
-What if instead I insert some other names with different keys:
+What happen if I use 2 different data keys to encrypt data, but these 2 keys were created with the same master key / (let'd do it all in one piece of code)
+```
+source ~/.profile
+mongosh --nodb --shell --eval "var LOCAL_KEY='$DEV_LOCAL_KEY'"
+
+# Let's store the KEY we want
+notEncryptedClient = Mongo("mongodb://localhost:27017/?replicaSet=replset")
+db = notEncryptedClient.getDB("ivanEncryptDB");
+PAUL_KEY = db.getCollection("ivanEncryptColl").findOne({ keyAltNames: { $in: ["PaulSharedKey"] } })._id
+IVAN_KEY = db.getCollection("ivanEncryptColl").findOne({ keyAltNames: { $in: ["ivanKey"] } })._id
+
+#Now that we get the key we can connect with an encrypted client
+var ClientSideFieldLevelEncryptionOptions = {"keyVaultNamespace" : "ivanEncryptDB.ivanEncryptColl","kmsProviders" : {"local" : {"key" : BinData(0, LOCAL_KEY)}}}
+encryptedClient = Mongo("mongodb://localhost:27017/?replicaSet=replset",ClientSideFieldLevelEncryptionOptions)
+
+keyVault = encryptedClient.getKeyVault() 
+keyVault.getKeyByAltName("PaulSharedKey")
+db = encryptedClient.getDB("db_csfle_test");
+coll = db.getCollection("coll_csfle_test");
+clientEncryption = encryptedClient.getClientEncryption()
+
+coll.insertOne({
+  "name" : "Paul",
+  "comment" : "I have encrypted the field taxid with Paul's key so only who has Paul master and data key should be able to see this",
+  "encrypted_field" : clientEncryption.encrypt(
+    PAUL_KEY,
+      "This should be encryped with PAUL_KEY",
+      "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+   )
+})
+
+coll.find().pretty()
+
+
+keyVault = encryptedClient.getKeyVault() 
+keyVault.getKeyByAltName("ivanKey")
+db = encryptedClient.getDB("db_csfle_test");
+coll = db.getCollection("coll_csfle_test");
+clientEncryption = encryptedClient.getClientEncryption()
+
+coll.insertOne({
+  "name" : "Ivan",
+  "comment" : "I have encrypted the field taxid with Ivan's key so only who has Ivan master and data key should be able to see this",
+  "encrypted_field" : clientEncryption.encrypt(
+    IVAN_KEY,
+      "This should be encryped with IVAN_KEY",
+      "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+   )
+})
+
+coll.find().pretty()
 ```
 
+
+Output:
+
 ```
+/Users/ivan.grigolon % source ~/.profile
+mongosh --nodb --shell --eval "var LOCAL_KEY='$DEV_LOCAL_KEY'"
+...
+> notEncryptedClient = Mongo("mongodb://localhost:27017/?replicaSet=replset")
+mongodb://localhost:27017/?replicaSet=replset&serverSelectionTimeoutMS=2000
+> db = notEncryptedClient.getDB("ivanEncryptDB");
+ivanEncryptDB
+replset [primary]> PAUL_KEY = db.getCollection("ivanEncryptColl").findOne({ keyAltNames: { $in: ["PaulSharedKey"] } })._id
+UUID("15da4b97-34b2-4d3e-9c4d-e81da50ea694")
+replset [primary]> IVAN_KEY = db.getCollection("ivanEncryptColl").findOne({ keyAltNames: { $in: ["ivanKey"] } })._id
+UUID("6c2e42bd-5054-4419-ab3f-37f7ea75163a")
+
+replset [primary]> var ClientSideFieldLevelEncryptionOptions = {"keyVaultNamespace" : "ivanEncryptDB.ivanEncryptColl","kmsProviders" : {"local" : {"key" : BinData(0, LOCAL_KEY)}}}
+{
+  keyVaultNamespace: 'ivanEncryptDB.ivanEncryptColl',
+  kmsProviders: {
+    local: {
+      key: Binary(Buffer.from("afde7aecaa340793a7f639a4bf57d08f4bf9bf340a8db18e0e7eee5595dee17b4f61ac1ae98fb8de467913e2533eb3c9b326a6ae7d425e5386d7a850e2fb260aa22d63e2ce56217fc044f8ef9af8ecaaf88801b3d76cd5acb9b0fe9d4dfdee41", "hex"), 0)
+    }
+  }
+}
+replset [primary]> encryptedClient = Mongo("mongodb://localhost:27017/?replicaSet=replset",ClientSideFieldLevelEncryptionOptions)
+mongodb://localhost:27017/?replicaSet=replset&serverSelectionTimeoutMS=2000
+
+replset [primary]> keyVault = encryptedClient.getKeyVault()
+KeyVault class for mongodb://localhost:27017/?replicaSet=replset&serverSelectionTimeoutMS=2000
+
+replset [primary]> keyVault.getKeyByAltName("PaulSharedKey")
+[
+  {
+    _id: UUID("15da4b97-34b2-4d3e-9c4d-e81da50ea694"),
+    keyMaterial: Binary(Buffer.from("41ac26288542b1c8b8b6a5a177d3d0131fffa8c6cc71345f4e657158941255b75dd6876db74b7108c2f284974aff9971a7d6baccbaf5566f9509ea7142a0d4bd25274eb114f522d4df3656b36672d41dcdacc66c345ee9091f029e170d39be82d2e6607a698a2f708ee3508e044101dbd5406c8fb612d7dffe88551dc7ec202d80b195f360a3d584d35d61e33dae20317a76811dee45b057c9364aaa580e997e", "hex"), 0),
+    creationDate: ISODate("2021-08-15T00:41:53.324Z"),
+    updateDate: ISODate("2021-08-15T00:41:53.378Z"),
+    status: 0,
+    masterKey: { provider: 'local' },
+    keyAltNames: [ 'PaulSharedKey' ]
+  }
+]
+replset [primary]> db = encryptedClient.getDB("db_csfle_test");
+db_csfle_test
+replset [primary]> coll = db.getCollection("coll_csfle_test");
+coll_csfle_test
+replset [primary]> clientEncryption = encryptedClient.getClientEncryption()
+ClientEncryption class for mongodb://localhost:27017/?replicaSet=replset&serverSelectionTimeoutMS=2000
+
+replset [primary]> coll.insertOne({
+...   "name" : "Paul",
+...   "comment" : "I have encrypted the field taxid with Paul's key so only who has Paul master and data key should be able to see this",
+...   "encrypted_field" : clientEncryption.encrypt(
+.....     PAUL_KEY,
+.....       "This should be encryped with PAUL_KEY",
+.....       "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+.....    )
+... })
+{
+  acknowledged: true,
+  insertedId: ObjectId("6118bb2fe2fe0fb664a9ceb9")
+}
+
+replset [primary]> coll.find().pretty()
+[
+  {
+    _id: ObjectId("6118bb2fe2fe0fb664a9ceb9"),
+    name: 'Paul',
+    comment: "I have encrypted the field taxid with Paul's key so only who has Paul master and data key should be able to see this",
+    encrypted_field: 'This should be encryped with PAUL_KEY'
+  }
+]
+
+
+# Bow let's insert Ivan's document but with his key
+
+replset [primary]> keyVault = encryptedClient.getKeyVault()
+KeyVault class for mongodb://localhost:27017/?replicaSet=replset&serverSelectionTimeoutMS=2000
+replset [primary]> keyVault.getKeyByAltName("ivanKey")
+[
+  {
+    _id: UUID("6c2e42bd-5054-4419-ab3f-37f7ea75163a"),
+    keyMaterial: Binary(Buffer.from("a52430da44142be372917704941c1dcf403a7d94236ab59587712b08e9b1be9fa30b8d1ad77ef55926971014f4569887f5006fa452e47384ee2499f4653791ba9717133ca3efdc70e98d3bd84fb637a349c6e8a7648624ad33ced01bd46c1b009a6237d4eb950b9d64c04bc0a0f4cf990397ebe559077bad17497d17e9ed5ab18b0d171c925c0ca593cb3eb5bafa4ca58a58a99c4aac9c5434b0d6077dc8f7aa", "hex"), 0),
+    creationDate: ISODate("2021-08-15T00:41:07.142Z"),
+    updateDate: ISODate("2021-08-15T00:41:07.239Z"),
+    status: 0,
+    masterKey: { provider: 'local' },
+    keyAltNames: [ 'ivanKey' ]
+  }
+]
+replset [primary]> db = encryptedClient.getDB("db_csfle_test");
+db_csfle_test
+replset [primary]> coll = db.getCollection("coll_csfle_test");
+coll_csfle_test
+replset [primary]> clientEncryption = encryptedClient.getClientEncryption()
+ClientEncryption class for mongodb://localhost:27017/?replicaSet=replset&serverSelectionTimeoutMS=2000
+
+
+replset [primary]> coll.insertOne({
+...   "name" : "Ivan",
+...   "comment" : "I have encrypted the field taxid with Ivan's key so only who has Ivan master and data key should be able to see this",
+...   "encrypted_field" : clientEncryption.encrypt(
+.....     IVAN_KEY,
+.....       "This should be encryped with IVAN_KEY",
+.....       "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+.....    )
+... })
+{
+  acknowledged: true,
+  insertedId: ObjectId("6118bb3de2fe0fb664a9ceba")
+}
+
+replset [primary]> coll.find().pretty()
+[
+  {
+    _id: ObjectId("6118bb2fe2fe0fb664a9ceb9"),
+    name: 'Paul',
+    comment: "I have encrypted the field taxid with Paul's key so only who has Paul master and data key should be able to see this",
+    encrypted_field: 'This should be encryped with PAUL_KEY'
+  },
+  {
+    _id: ObjectId("6118bb3de2fe0fb664a9ceba"),
+    name: 'Ivan',
+    comment: "I have encrypted the field taxid with Ivan's key so only who has Ivan master and data key should be able to see this",
+    encrypted_field: 'This should be encryped with IVAN_KEY'
+  }
+]
+```
+
+As you can see I can decrypt both document using one key, which is saying that 2 different data keys can decrypt the same data if this was created with the same master key.
+
+But what if I create 2 keys with different master key? Let'try:
+

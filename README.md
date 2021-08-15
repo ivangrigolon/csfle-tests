@@ -236,8 +236,9 @@ You should see:
 ```
 
 
-```
+
 # Use the Mongo() constructor to create a database connection with the client-side field level encryption options. Replace the mongodb://myMongo.example.net URI with the connection string URI of the target cluster.
+
 ```
 encryptedClient = Mongo(
   "mongodb://localhost:27017/?replicaSet=replset",

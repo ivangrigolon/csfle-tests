@@ -18,7 +18,7 @@
 6.2. `Cmd + Shift + X (Mac)` and it is pushed
 
 
-#### 2 very different encryption Key types
+# 2 very different encryption Key types
 
 ### Master Key
 1. This the key that is used to encrypt and decrypt the data key.

@@ -271,15 +271,16 @@ I get:
 ]
 ```
 
-The following operation issued from mongosh explicitly encrypts the taxid field as part of a write operation.
+## The following operation issued from mongosh explicitly encrypts the taxid field as part of a write operation.
 
+
+Get the db and collection objects as needed
 ```
-#  Get the db and collection objects as needed
 db = encryptedClient.getDB("hr");
 coll = db.getCollection("employees");
 ```
 
-#Retrieve the ClientEncryption object and use the ClientEncryption.encrypt() method to encrypt a value using a specific data encryption key UUID and encryption algorithm:
+Retrieve the ClientEncryption object and use the ClientEncryption.encrypt() method to encrypt a value using a specific data encryption key UUID and encryption algorithm:
 ```
 replset [primary]> clientEncryption = encryptedClient.getClientEncryption();
 ClientEncryption class for mongodb://localhost:27017/?replicaSet=replset&serverSelectionTimeoutMS=2000
@@ -296,6 +297,7 @@ coll.insertOne({
    )
 })
 ```
+
 Output:
 ```
 {

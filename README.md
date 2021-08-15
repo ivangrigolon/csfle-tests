@@ -28,7 +28,9 @@
 
 ### Data key
 
-
+1. This is the data-encryption key stored on a keyvault collection on the database itself or on a separate database
+2. Different keys created with the same master-key decrypt the same data
+3.
 
 ## Example of manual encryption by using locally managed key
 

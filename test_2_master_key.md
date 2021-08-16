@@ -58,23 +58,27 @@ TIM_DATA_KEY = tim_keyVault.createKey( "local",["timKey"])
 ```
 
 
-# Let's store the KEY we want (optional if you have created them in the step before)
-
+### Let's store the KEY we want (optional if you have created them in the step before)
+```
 //TOM_DATA_KEY = notEncryptedConnection.getDB(keyDB).getCollection(keyCOLL).findOne({ keyAltNames: { $in: ["tomKey"] } })._id
 //TIM_DATA_KEY = notEncryptedConnection.getDB(keyDB).getCollection(keyCOLL).findOne({ keyAltNames: { $in: ["timKey"] } })._id
+```
 
-
-#Now that we get the key we can connect with an encrypted client
+### Now that we get the key we can connect with an encrypted client
+```
 tomEncryptedClient = Mongo("mongodb://localhost:27017/?replicaSet=replset",tom_ClientSideFieldLevelEncryptionOptions)
 timEncryptedClient = Mongo("mongodb://localhost:27017/?replicaSet=replset",tim_ClientSideFieldLevelEncryptionOptions)
-
 
 tomkeyVault = tomEncryptedClient.getKeyVault()
 timkeyVault = timEncryptedClient.getKeyVault() 
 
 tomkeyVault.getKeyByAltName("tomKey")
 timkeyVault.getKeyByAltName("timKey")
+```
 
+### Create the collection and database objects
+
+```
 tom_db_conn_object = tomEncryptedClient.getDB("csfle_db");
 tom_coll_conn_object = tom_db_conn_object.getCollection("csfle_coll");
 tim_db_conn_object = tomEncryptedClient.getDB("csfle_db");
@@ -82,7 +86,10 @@ tim_coll_conn_object = tim_db_conn_object.getCollection("csfle_coll");
 
 tomclientEncryption = tomEncryptedClient.getClientEncryption()
 timclientEncryption = timEncryptedClient.getClientEncryption()
+```
 
+### Insert 2 tests documents
+```
 tom_coll_conn_object.insertOne({
   "name" : "Tom",
   "comment" : "I have encrypted the field taxid with Tom's master key so only who has Tom master and data key should be able to see this",
@@ -102,10 +109,11 @@ tim_coll_conn_object.insertOne({
         "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
      )
   })
-
-If I connect with client without providing any master key I get:
 ```
 
+### If I connect with client without providing any master key I get:
+
+```
 /Users/ivan.grigolon % mongosh
 
 Enterprise replset [direct: primary]> show dbs
@@ -133,7 +141,7 @@ Enterprise replset [direct: primary]> db.csfle_coll.find()
 ```
 
 
-Let's test what I can see:
+### Extended testings:
 
 ```
 bash-3.2$ mongosh --nodb --shell --eval "var TIM_LOCAL_KEY='$TIM_LOCAL_KEY'; var TOM_LOCAL_KEY='$TOM_LOCAL_KEY'"

@@ -34,23 +34,25 @@ notEncryptedConnection.getDB(keyDB).getCollection(keyCOLL).createIndex({keyAltNa
       }
     }
   })
+```
 
-
-## Create the encryption configuration
+### Create the encryption configuration
 ```
 var tom_ClientSideFieldLevelEncryptionOptions = {"keyVaultNamespace" : keyVaultNamespace,"kmsProviders" : {"local" : {"key" : BinData(0, TOM_LOCAL_KEY)}}}
 var tim_ClientSideFieldLevelEncryptionOptions = {"keyVaultNamespace" : keyVaultNamespace,"kmsProviders" : {"local" : {"key" : BinData(0, TIM_LOCAL_KEY)}}}
 
 tom_csfleDatabaseConnection = Mongo("mongodb://localhost:27017/?replicaSet=replset",tom_ClientSideFieldLevelEncryptionOptions)
 tim_csfleDatabaseConnection = Mongo("mongodb://localhost:27017/?replicaSet=replset",tim_ClientSideFieldLevelEncryptionOptions)
+```
 
-## Create the Key Vault object in order to access the methods to create the keys
+### Create the Key Vault object in order to access the methods to create the keys
 ```
 tom_keyVault = tom_csfleDatabaseConnection.getKeyVault();
 tim_keyVault = tim_csfleDatabaseConnection.getKeyVault();
 ```
-## Create the Key if not created already or otherwise get them by name
 
+### Create the Key if not created already or otherwise get them by name
+```
 TOM_DATA_KEY = tom_keyVault.createKey( "local",["tomKey"])
 TIM_DATA_KEY = tim_keyVault.createKey( "local",["timKey"])
 ```

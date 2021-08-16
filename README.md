@@ -5,9 +5,11 @@
 **[Aws usefull command](#aws-usefull-command)**<br>
 **[2 very different encryption Key types](#2-very-different-encryption-Key-types)**<br>
 
-## How to git reinder as I don't use it often
+## How to git reminder as I don't use it often
 
 ## Basic sequence to follow
+Run `git add .;git commit -m "`date`";git push`
+
 1. `git pull` - this will download the latest version. If you don't do this and you try to push something you will see something like ! [rejected]        main -> main (fetch first)
 2. do your changes locally
 3. `git add .` - this is to add the modification to all files, or you can specify the files you want to commit
@@ -30,7 +32,6 @@
 
 1. This is the data-encryption key stored on a keyvault collection on the database itself or on a separate database
 2. Different keys created with the same master-key decrypt the same data
-3.
 
 ## Example of manual encryption by using locally managed key
 
@@ -554,4 +555,8 @@ replset [primary]> coll.find().pretty()
 As you can see I can decrypt both document using one key, which is saying that 2 different data keys can decrypt the same data if this was created with the same master key.
 
 But what if I create 2 keys with different master key? Let'try:
+
+### Full examples
+
+For an end-to-end procedure for configuring field level encryption using select MongoDB 4.2+ compatible drivers, see the [Client Side Field Level Encryption Guide](https://docs.mongodb.com/drivers/security/client-side-field-level-encryption-guide/).
 

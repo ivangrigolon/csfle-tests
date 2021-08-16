@@ -124,7 +124,7 @@ ivan_coll_conn_object.insertOne(
     "field3" : "This content is not encrypted"
   }
 )
-
+```
 ## Output visible from a connection not loading the master key:
 
 ```
